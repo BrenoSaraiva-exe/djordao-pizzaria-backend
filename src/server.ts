@@ -1,22 +1,12 @@
 
-import Fastify from "fastify";
-
-const app = Fastify({
-  logger: true,
-});
-
-app.get("/health", async () => {
-  return {
-    status: "ok",
-    message: "Djordão Pizzaria API is running!",
-  };
-});
+import { app } from "./app.js";
+import { env } from "./config/env.js";
 
 const start = async () => {
   try {
     await app.listen({
-      port: 3333,
-      host: "0.0.0.0",
+      port: env.PORT,
+      host: env.HOST,
     });
   } catch (error) {
     app.log.error(error);
