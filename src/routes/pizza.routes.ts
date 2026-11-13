@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 import {
   createPizzaSchema,
+  listPizzasQuerySchema,
   updatePizzaSchema,
 } from "../schemas/pizza.schema.js";
 import {
@@ -22,14 +23,16 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ["Pizzas"],
+        querystring: listPizzasQuerySchema,
       },
     },
-    async (_request, reply) => {
-      const data = await getAllPizzas();
+    async (request, reply) => {
+      const data = await getAllPizzas(request.query);
 
       return reply.status(200).send({
         message: "Pizzas retrieved successfully",
-        data,
+        data: data.data,
+        meta: data.meta,
       });
     },
   );
