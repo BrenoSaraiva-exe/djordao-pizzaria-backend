@@ -1,22 +1,18 @@
 import type { ZodTypeProvider } from "@fastify/type-provider-zod";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod/v4";
-import { eq } from "drizzle-orm";
 
-import { db } from "../db/index.js";
-import { pizzas } from "../db/schema/pizzas.js";
-
-const createPizzaSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  description: z.string().trim().min(5).max(300),
-  price: z.number().positive(),
-});
-
-const updatePizzaSchema = createPizzaSchema
-  .partial()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });
+import {
+  createPizzaSchema,
+  updatePizzaSchema,
+} from "../schemas/pizza.schema.js";
+import {
+  createPizza,
+  deletePizza,
+  getAllPizzas,
+  getPizzaById,
+  patchPizza,
+} from "../services/pizza.service.js";
 
 const pizzaRoutes: FastifyPluginAsync = async (app) => {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -29,7 +25,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (_request, reply) => {
-      const data = await db.select().from(pizzas);
+      const data = await getAllPizzas();
 
       return reply.status(200).send({
         message: "Pizzas retrieved successfully",
@@ -47,13 +43,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const [data] = await db
-        .insert(pizzas)
-        .values({
-          ...request.body,
-          price: request.body.price.toString(),
-        })
-        .returning();
+      const data = await createPizza(request.body);
 
       return reply.status(201).send({
         message: "Pizza created successfully",
@@ -73,10 +63,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const [data] = await db
-        .select()
-        .from(pizzas)
-        .where(eq(pizzas.id, request.params.id));
+      const data = await getPizzaById(request.params.id);
 
       if (!data) {
         return reply.status(404).send({
@@ -102,10 +89,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const [deletedPizza] = await db
-        .delete(pizzas)
-        .where(eq(pizzas.id, request.params.id))
-        .returning();
+      const deletedPizza = await deletePizza(request.params.id);
 
       if (!deletedPizza) {
         return reply.status(404).send({
@@ -131,15 +115,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (request, reply) => {
-      const [updatedPizza] = await db
-        .update(pizzas)
-        .set({
-          ...request.body,
-          price: request.body.price?.toString(),
-          updatedAt: new Date(),
-        })
-        .where(eq(pizzas.id, request.params.id))
-        .returning();
+      const updatedPizza = await patchPizza(request.params.id, request.body);
 
       if (!updatedPizza) {
         return reply.status(404).send({
