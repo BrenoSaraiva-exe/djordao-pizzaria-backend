@@ -18,7 +18,7 @@ export const pizzas = pgTable("pizzas", {
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  categoryId: integer("category_id").references(() => categories.id, {
-    onDelete: "no action",
-  }),
+  categoryId: integer("category_id")
+    .notNull()
+    .references(() => categories.id),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "pizzas" ALTER COLUMN "category_id" SET NOT NULL;

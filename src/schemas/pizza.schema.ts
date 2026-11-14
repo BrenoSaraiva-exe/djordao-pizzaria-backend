@@ -4,6 +4,7 @@ export const createPizzaSchema = z.object({
   name: z.string().trim().min(2).max(80),
   description: z.string().trim().min(5).max(300),
   price: z.number().positive(),
+  categoryId: z.number().int().positive(),
 });
 
 export const updatePizzaSchema = createPizzaSchema

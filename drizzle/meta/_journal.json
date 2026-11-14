@@ -15,6 +15,13 @@
       "when": 1794664997519,
       "tag": "0001_first_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794668961152,
+      "tag": "0002_orange_wild_child",
+      "breakpoints": true
     }
   ]
 }
