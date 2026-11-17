@@ -2,6 +2,7 @@ import { asc, eq, ilike, count } from "drizzle-orm";
 
 import { db } from "../db/index.js";
 import { pizzas } from "../db/schema/pizzas.js";
+import { categories } from "../db/schema/categories.js";
 import type {
   CreatePizzaInput,
   ListPizzasQuery,
@@ -27,8 +28,21 @@ export async function getAllPizzas(query: ListPizzasQuery) {
   const meta = { total, page, limit, totalPages };
 
   const data = await db
-    .select()
+    .select({
+      id: pizzas.id,
+      name: pizzas.name,
+      description: pizzas.description,
+      price: pizzas.price,
+      isActive: pizzas.isActive,
+      createdAt: pizzas.createdAt,
+      updatedAt: pizzas.updatedAt,
+      category: {
+        id: categories.id,
+        name: categories.name,
+      },
+    })
     .from(pizzas)
+    .innerJoin(categories, eq(pizzas.categoryId, categories.id))
     .where(filters)
     .orderBy(asc(pizzas.id))
     .limit(limit)
