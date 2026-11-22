@@ -1,4 +1,4 @@
-import { asc, eq, ilike, count } from "drizzle-orm";
+import { asc, eq, ilike, count, and } from "drizzle-orm";
 
 import { db } from "../db/index.js";
 import { pizzas } from "../db/schema/pizzas.js";
@@ -14,13 +14,26 @@ export async function getAllPizzas(query: ListPizzasQuery) {
   const offset = (page - 1) * query.limit;
   const limit = query.limit;
 
-  const filters = query.name
-    ? ilike(pizzas.name, `%${query.name}%`)
-    : undefined;
+  const conditions = [];
+
+  if (query.name) {
+    conditions.push(ilike(pizzas.name, `%${query.name}%`));
+  }
+
+  if (query.categoryId) {
+    conditions.push(eq(pizzas.categoryId, query.categoryId));
+  }
+
+  if (query.categoryName) {
+    conditions.push(ilike(categories.name, `%${query.categoryName}%`));
+  }
+
+  const filters = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [result] = await db
     .select({ count: count() })
     .from(pizzas)
+    .innerJoin(categories, eq(pizzas.categoryId, categories.id))
     .where(filters);
   const total = Number(result?.count ?? 0);
   const totalPages = Math.ceil(total / limit);
