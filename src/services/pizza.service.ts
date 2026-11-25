@@ -8,6 +8,7 @@ import type {
   ListPizzasQuery,
   UpdatePizzaInput,
 } from "../schemas/pizza.schema.js";
+import { pizzaDetails } from "../db/schema/pizza-details.js";
 
 export async function getAllPizzas(query: ListPizzasQuery) {
   const page = query.page;
@@ -65,9 +66,16 @@ export async function getAllPizzas(query: ListPizzasQuery) {
 }
 
 export async function getPizzaById(id: number) {
-  const [pizza] = await db.select().from(pizzas).where(eq(pizzas.id, id));
+  const [result] = await db
+    .select({
+      pizza: pizzas,
+      details: { preparationTime: pizzaDetails.preparationTime },
+    })
+    .from(pizzas)
+    .leftJoin(pizzaDetails, eq(pizzas.id, pizzaDetails.pizzaId))
+    .where(eq(pizzas.id, id));
 
-  return pizza;
+  return result;
 }
 
 export async function createPizza(input: CreatePizzaInput) {
