@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 
-import healthRoutes from "./routes/health.routes.js";
+import ingredientRoutes from "./routes/ingredients.routes.js";
 import pizzaRoutes from "./routes/pizza.routes.js";
 import {
   jsonSchemaTransform,
@@ -58,4 +58,4 @@ app.register(swaggerUi, {
   routePrefix: "/docs",
 });
 
-app.register(pizzaRoutes);
+app.register(pizzaRoutes, ingredientRoutes);
