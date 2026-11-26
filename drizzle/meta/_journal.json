@@ -36,6 +36,13 @@
       "when": 1795580165780,
       "tag": "0004_breezy_warbird",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795657156248,
+      "tag": "0005_noisy_iron_monger",
+      "breakpoints": true
     }
   ]
 }

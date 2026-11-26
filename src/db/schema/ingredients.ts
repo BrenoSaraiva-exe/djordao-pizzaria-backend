@@ -6,7 +6,6 @@ import {
   numeric,
   boolean,
   timestamp,
-  integer,
 } from "drizzle-orm/pg-core";
 
 export const ingredients  = pgTable("ingredients", {
