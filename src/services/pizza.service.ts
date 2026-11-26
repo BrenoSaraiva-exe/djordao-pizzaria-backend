@@ -10,6 +10,8 @@ import type {
 } from "../schemas/pizza.schema.js";
 import { pizzaDetails } from "../db/schema/pizza-details.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
+import { pizzaIngredients } from "../db/schema/pizza-ingredients.js";
+import { ingredients } from "../db/schema/index.js";
 
 export async function getAllPizzas(query: ListPizzasQuery) {
   const { page, limit, offset } = getPagination(query);
@@ -63,16 +65,42 @@ export async function getAllPizzas(query: ListPizzasQuery) {
 }
 
 export async function getPizzaById(id: number) {
-  const [result] = await db
+  const [pizza] = await db
     .select({
       pizza: pizzas,
-      details: { preparationTime: pizzaDetails.preparationTime },
+      details: {
+        preparationTime: pizzaDetails.preparationTime,
+      },
+      category: {
+        id: categories.id,
+        name: categories.name,
+      },
     })
     .from(pizzas)
     .leftJoin(pizzaDetails, eq(pizzas.id, pizzaDetails.pizzaId))
+    .innerJoin(categories, eq(pizzas.categoryId, categories.id))
     .where(eq(pizzas.id, id));
 
-  return result;
+  if (!pizza) {
+    return undefined;
+  }
+
+  const pizzaIngredientList = await db
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      description: ingredients.description,
+      unit: ingredients.unit,
+      price: ingredients.price,
+    })
+    .from(pizzaIngredients)
+    .innerJoin(ingredients, eq(pizzaIngredients.ingredientId, ingredients.id))
+    .where(eq(pizzaIngredients.pizzaId, id));
+
+  return {
+    ...pizza,
+    ingredients: pizzaIngredientList,
+  };
 }
 
 export async function createPizza(input: CreatePizzaInput) {
