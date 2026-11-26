@@ -9,11 +9,10 @@ import type {
   UpdatePizzaInput,
 } from "../schemas/pizza.schema.js";
 import { pizzaDetails } from "../db/schema/pizza-details.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export async function getAllPizzas(query: ListPizzasQuery) {
-  const page = query.page;
-  const offset = (page - 1) * query.limit;
-  const limit = query.limit;
+  const { page, limit, offset } = getPagination(query);
 
   const conditions = [];
 
@@ -37,9 +36,7 @@ export async function getAllPizzas(query: ListPizzasQuery) {
     .innerJoin(categories, eq(pizzas.categoryId, categories.id))
     .where(filters);
   const total = Number(result?.count ?? 0);
-  const totalPages = Math.ceil(total / limit);
-
-  const meta = { total, page, limit, totalPages };
+  const meta = getPaginationMeta(total, page, limit);
 
   const data = await db
     .select({

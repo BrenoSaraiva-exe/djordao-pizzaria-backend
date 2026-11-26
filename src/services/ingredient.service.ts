@@ -6,11 +6,10 @@ import type {
   UpdateIngredientInput,
 } from "../schemas/ingredients.schema.js";
 import { db } from "../db/index.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export async function getAllIngredients(query: ListIngredientsQuery) {
-  const page = query.page;
-  const offset = (page - 1) * query.limit;
-  const limit = query.limit;
+  const { page, limit, offset } = getPagination(query);
 
   const conditions = [];
 
@@ -25,9 +24,7 @@ export async function getAllIngredients(query: ListIngredientsQuery) {
     .from(ingredients)
     .where(filters);
   const total = Number(result?.count ?? 0);
-  const totalPages = Math.ceil(total / limit);
-
-  const meta = { total, page, limit, totalPages };
+  const meta = getPaginationMeta(total, page, limit);
 
   const data = await db
     .select({

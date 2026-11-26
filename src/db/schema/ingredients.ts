@@ -4,17 +4,14 @@ import {
   varchar,
   text,
   numeric,
-  boolean,
-  timestamp,
 } from "drizzle-orm/pg-core";
+import { activityColumns } from "./common.js";
 
-export const ingredients  = pgTable("ingredients", {
+export const ingredients = pgTable("ingredients", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   unit: varchar("unit", { length: 50 }).notNull(),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  ...activityColumns(),
 });

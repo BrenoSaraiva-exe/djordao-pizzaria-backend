@@ -1,7 +1,7 @@
 import type { ZodTypeProvider } from "@fastify/type-provider-zod";
 import type { FastifyPluginAsync } from "fastify";
-import { z } from "zod/v4";
 
+import { idParamsSchema } from "../schemas/common.schema.js";
 import {
   createPizzaSchema,
   listPizzasQuerySchema,
@@ -60,9 +60,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ["Pizzas"],
-        params: z.object({
-          id: z.coerce.number().int().positive(),
-        }),
+        params: idParamsSchema,
       },
     },
     async (request, reply) => {
@@ -86,9 +84,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ["Pizzas"],
-        params: z.object({
-          id: z.coerce.number().int().positive(),
-        }),
+        params: idParamsSchema,
       },
     },
     async (request, reply) => {
@@ -111,9 +107,7 @@ const pizzaRoutes: FastifyPluginAsync = async (app) => {
     {
       schema: {
         tags: ["Pizzas"],
-        params: z.object({
-          id: z.coerce.number().int().positive(),
-        }),
+        params: idParamsSchema,
         body: updatePizzaSchema,
       },
     },

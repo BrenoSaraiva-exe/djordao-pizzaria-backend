@@ -58,4 +58,5 @@ app.register(swaggerUi, {
   routePrefix: "/docs",
 });
 
-app.register(pizzaRoutes, ingredientRoutes);
+app.register(pizzaRoutes);
+app.register(ingredientRoutes);

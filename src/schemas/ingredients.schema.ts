@@ -1,21 +1,18 @@
 import { z } from "zod/v4";
 
-export const createIngredientSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  description: z.string().trim().min(5).max(300),
-  price: z.number().positive(),
+import {
+  paginationQuerySchema,
+  productFieldsSchema,
+  updateSchema,
+} from "./common.schema.js";
+
+export const createIngredientSchema = productFieldsSchema.extend({
   unit: z.string().trim().min(1).max(50),
 });
 
-export const updateIngredientSchema = createIngredientSchema
-  .partial()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });
+export const updateIngredientSchema = updateSchema(createIngredientSchema);
 
-export const listIngredientsQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(10),
+export const listIngredientsQuerySchema = paginationQuerySchema.extend({
   name: z.string().trim().min(1).optional(),
 });
 
