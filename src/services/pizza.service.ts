@@ -44,15 +44,10 @@ export async function getAllPizzas(query: ListPizzasQuery) {
     .select({
       id: pizzas.id,
       name: pizzas.name,
-      description: pizzas.description,
       price: pizzas.price,
-      isActive: pizzas.isActive,
+      is_active: pizzas.isActive,
+      categoryName: categories.name,
       createdAt: pizzas.createdAt,
-      updatedAt: pizzas.updatedAt,
-      category: {
-        id: categories.id,
-        name: categories.name,
-      },
     })
     .from(pizzas)
     .innerJoin(categories, eq(pizzas.categoryId, categories.id))
@@ -104,33 +99,102 @@ export async function getPizzaById(id: number) {
 }
 
 export async function createPizza(input: CreatePizzaInput) {
-  const [pizza] = await db
-    .insert(pizzas)
-    .values({
-      ...input,
-      price: input.price.toString(),
-    })
-    .returning();
+  const pizzaId = await db.transaction(async (tx) => {
+    const { preparationTime, ingredients: ingredientIds, price, ...pizzaInput } =
+      input;
+
+    const [pizza] = await tx
+      .insert(pizzas)
+      .values({
+        ...pizzaInput,
+        price: price.toString(),
+      })
+      .returning({ id: pizzas.id });
+
+    if (!pizza) {
+      throw new Error("Pizza insert did not return the created record");
+    }
+
+    await tx.insert(pizzaDetails).values({
+      pizzaId: pizza.id,
+      preparationTime,
+    });
+
+    await tx.insert(pizzaIngredients).values(
+      ingredientIds.map((ingredientId: CreatePizzaInput["ingredients"][number]) => ({
+        pizzaId: pizza.id,
+        ingredientId,
+      })),
+    );
+
+    return pizza.id;
+  });
+
+  const pizza = await getPizzaById(pizzaId);
+
+  if (!pizza) {
+    throw new Error(`Created pizza ${pizzaId} could not be retrieved`);
+  }
 
   return pizza;
 }
 
 export async function patchPizza(id: number, input: UpdatePizzaInput) {
-  const [pizza] = await db
-    .update(pizzas)
-    .set({
-      ...input,
-      price: input.price?.toString(),
-      updatedAt: new Date(),
-    })
-    .where(eq(pizzas.id, id))
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    const {
+      preparationTime,
+      ingredients: ingredientIds,
+      price,
+      ...pizzaInput
+    } = input;
 
-  return pizza;
+    const [pizza] = await tx
+      .update(pizzas)
+      .set({
+        ...pizzaInput,
+        ...(price !== undefined ? { price: price.toString() } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(pizzas.id, id))
+      .returning({ id: pizzas.id });
+
+    if (!pizza) {
+      return false;
+    }
+
+    if (preparationTime !== undefined) {
+      await tx
+        .insert(pizzaDetails)
+        .values({ pizzaId: id, preparationTime })
+        .onConflictDoUpdate({
+          target: pizzaDetails.pizzaId,
+          set: { preparationTime },
+        });
+    }
+
+    if (ingredientIds !== undefined) {
+      await tx.delete(pizzaIngredients).where(eq(pizzaIngredients.pizzaId, id));
+
+      await tx.insert(pizzaIngredients).values(
+        ingredientIds.map((ingredientId: CreatePizzaInput["ingredients"][number]) => ({
+          pizzaId: id,
+          ingredientId,
+        })),
+      );
+    }
+
+    return true;
+  });
+
+  return updated ? getPizzaById(id) : undefined;
 }
 
 export async function deletePizza(id: number) {
-  const [pizza] = await db.delete(pizzas).where(eq(pizzas.id, id)).returning();
+  const [pizza] = await db.transaction(async (tx) => {
+    await tx.delete(pizzaDetails).where(eq(pizzaDetails.pizzaId, id));
+
+    return tx.delete(pizzas).where(eq(pizzas.id, id)).returning();
+  });
 
   return pizza;
 }

@@ -8,6 +8,13 @@ import {
 
 export const createPizzaSchema = productFieldsSchema.extend({
   categoryId: z.number().int().positive(),
+  preparationTime: z.number().int().positive(),
+  ingredients: z
+    .array(z.number().int().positive())
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Ingredients must not contain duplicate IDs",
+    }),
 });
 
 export const updatePizzaSchema = updateSchema(createPizzaSchema);
